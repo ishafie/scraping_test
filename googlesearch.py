@@ -9,7 +9,7 @@ from scrapy.spiders import Spider
 class PartnersSpider(Spider):
 	name = 'googlespider'
 	start_urls = ['https://www.google.fr/search?q=test&oq=test&aqs=chrome..69i57j69i61j0l4.615j0j4&sourceid=chrome&ie=UTF-8']
-	end = 0
+	is_google_search = true
 	urls_set = set()
 
 	def __init__(self):
@@ -18,11 +18,11 @@ class PartnersSpider(Spider):
 	def parse(self, response):
 		if "text/html" not in response.headers.getlist("Content-Type"):
 			yield None
-		if self.end == 0:
+		if self.is_google_search == true:
 			googlelinks = parseGoogleLink(response.xpath('//h3/a/@href').extract())
 		else :
 			googlelinks = response.xpath('//a/@href').extract()
-		self.end += 1;
+		self.is_google_search = false;
 		requests = []
 		cdt_filter = lambda x: x and not "wiki" in x and not x.startswith('#')
 		addPathToGoogleLink.url = response.url
