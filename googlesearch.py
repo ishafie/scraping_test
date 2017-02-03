@@ -10,33 +10,41 @@ class PartnersSpider(Spider):
 	name = 'googlespider'
 	start_urls = ['https://www.google.fr/search?q=test&oq=test&aqs=chrome..69i57j69i61j0l4.615j0j4&sourceid=chrome&ie=UTF-8']
 	end = 0
+	urls_set = set()
 
 	def __init__(self):
 		logging.getLogger('scrapy').setLevel(logging.WARNING)
 
-	"""def parseLink(self, response):
-		print("\n======================================\n")
-		if end == 0:
-			googlelinks = response.xpath('//h3/a/@href').extract()
-			for index, link in enumerate(googlelinks):
-				f = furl(link)
-				googlelinks[index] = f.args['q']
-		else:
-			googlelinks = response.css('li.next a::attr("href")').extract()
-		end += 1;
-		for link in googlelinks:
-			print(link)
-		return (googlelinks)"""
-
 	def parse(self, response):
-		googlelinks = response.xpath('//h3/a/@href').extract()
+		if "text/html" not in response.headers.getlist("Content-Type"):
+			yield None
 		if self.end == 0:
-			for index, link in enumerate(googlelinks):
-				f = furl(link)
-				googlelinks[index] = f.args['q']
+			googlelinks = parseGoogleLink(response.xpath('//h3/a/@href').extract())
+		else :
+			googlelinks = response.xpath('//a/@href').extract()
 		self.end += 1;
 		requests = []
-		for link in googlelinks:
-			print (link)
-			yield scrapy.Request(link, callback=self.parse)
-		#return (requests)
+		cdt_filter = lambda x: x and not "wiki" in x and not x.startswith('#')
+		addPathToGoogleLink.url = response.url
+		for link in map(addPathToGoogleLink, filter(cdt_filter, googlelinks)):
+			print(link)
+			if link in self.urls_set:
+				yield None
+			else :
+				self.urls_set.add(link)
+				print(link)
+				yield scrapy.Request(link, callback=self.parse)
+
+def addPathToGoogleLink(link):
+	if not link.startswith('http'):
+		if not link.startswith('/') :
+			link = '/'.join(addPathToGoogleLink.url.split('/')[:3]) + '/' + link
+		else :
+			link = '/'.join(addPathToGoogleLink.url.split('/')[:3]) + link
+	return (link)
+
+def parseGoogleLink(googlelinks):
+	for index, link in enumerate(googlelinks):
+		f = furl(link)
+		googlelinks[index] = f.args['q']
+	return googlelinks

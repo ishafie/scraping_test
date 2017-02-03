@@ -25,6 +25,10 @@ $> sudo apt-get install python-dev libxml2-dev libxslt1-dev zlib1g-dev libffi-de
 $> sudo pip3 install scrapy
 ```
 
+- Installer Tkinter </br>
+```
+$> sudo apt-get install python3-tk
+```
 
 ## Utilisation
 
